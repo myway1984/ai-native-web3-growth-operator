@@ -45,6 +45,9 @@ const fallbackAILab: AILabEntry[] = aiLabItems.map(({ title, body }) => ({ title
 const fallbackNotes: NoteEntry[] = notes.map((title, index) => ({ title, sort: index + 1 }));
 
 export async function getCmsContent() {
+  const unifiedCms = await getUnifiedCmsContent();
+  if (unifiedCms) return unifiedCms;
+
   const [projects, aiLab, noteItems] = await Promise.all([
     getWorkProjects(),
     getAILabEntries(),
@@ -58,23 +61,38 @@ export async function getCmsContent() {
   };
 }
 
+async function getUnifiedCmsContent() {
+  const pages = await queryDatabase(process.env.NOTION_CMS_DATABASE_ID);
+  if (!pages) return null;
+
+  const publishedPages = pages.filter(isPublished);
+  const projects = publishedPages
+    .filter((page) => getSection(page) === "Projects")
+    .map(mapWorkProject)
+    .sort(sortByOrder);
+  const aiLab = publishedPages
+    .filter((page) => getSection(page) === "AI Lab")
+    .map(mapAILabEntry)
+    .sort(sortByOrder);
+  const noteItems = publishedPages
+    .filter((page) => getSection(page) === "Notes")
+    .map(mapNoteEntry)
+    .sort(sortByOrder);
+
+  return {
+    projects: projects.length ? projects : fallbackProjects,
+    aiLab: aiLab.length ? aiLab : fallbackAILab,
+    notes: noteItems.length ? noteItems : fallbackNotes,
+  };
+}
+
 async function getWorkProjects(): Promise<WorkProject[]> {
   const pages = await queryDatabase(process.env.NOTION_PROJECTS_DATABASE_ID);
   if (!pages) return fallbackProjects;
 
   const projects = pages
     .filter(isPublished)
-    .map((page) => {
-      const properties = page.properties || {};
-      return {
-        name: getText(properties, ["Name", "Project", "Title"]) || "Untitled Project",
-        scene: getText(properties, ["Scene", "Business Scene", "Summary"]) || "TODO: 业务场景",
-        role: getText(properties, ["Role", "Action", "Contribution"]) || "TODO: 负责动作",
-        outcome: getText(properties, ["Outcome", "Result", "Impact"]) || "TODO: 结果指标",
-        url: getUrl(properties, ["URL", "Public URL", "Link"]),
-        sort: getNumber(properties, ["Sort", "Sort Order", "Order"]),
-      };
-    })
+    .map(mapWorkProject)
     .sort(sortByOrder);
 
   return projects.length ? projects : fallbackProjects;
@@ -86,15 +104,7 @@ async function getAILabEntries(): Promise<AILabEntry[]> {
 
   const entries = pages
     .filter(isPublished)
-    .map((page) => {
-      const properties = page.properties || {};
-      return {
-        title: getText(properties, ["Title", "Name"]) || "Untitled Experiment",
-        body: getText(properties, ["Body", "Workflow", "Summary", "Result"]) || "TODO: 工作流说明",
-        url: getUrl(properties, ["URL", "Public URL", "Link"]),
-        sort: getNumber(properties, ["Sort", "Sort Order", "Order"]),
-      };
-    })
+    .map(mapAILabEntry)
     .sort(sortByOrder);
 
   return entries.length ? entries : fallbackAILab;
@@ -106,18 +116,42 @@ async function getNotes(): Promise<NoteEntry[]> {
 
   const noteItems = pages
     .filter(isPublished)
-    .map((page) => {
-      const properties = page.properties || {};
-      return {
-        title: getText(properties, ["Title", "Name"]) || "Untitled Note",
-        topic: getText(properties, ["Topic", "Category", "Summary"]),
-        url: getUrl(properties, ["URL", "Public URL", "Link"]),
-        sort: getNumber(properties, ["Sort", "Sort Order", "Order"]),
-      };
-    })
+    .map(mapNoteEntry)
     .sort(sortByOrder);
 
   return noteItems.length ? noteItems : fallbackNotes;
+}
+
+function mapWorkProject(page: NotionPage): WorkProject {
+  const properties = page.properties || {};
+  return {
+    name: getText(properties, ["Name", "Project", "Title"]) || "Untitled Project",
+    scene: getText(properties, ["Scene", "Business Scene", "Summary"]) || "TODO: 业务场景",
+    role: getText(properties, ["Role", "Action", "Contribution"]) || "TODO: 负责动作",
+    outcome: getText(properties, ["Outcome", "Result", "Impact"]) || "TODO: 结果指标",
+    url: getUrl(properties, ["URL", "userDefined:URL", "Public URL", "Link"]),
+    sort: getNumber(properties, ["Sort", "Sort Order", "Order"]),
+  };
+}
+
+function mapAILabEntry(page: NotionPage): AILabEntry {
+  const properties = page.properties || {};
+  return {
+    title: getText(properties, ["Title", "Name"]) || "Untitled Experiment",
+    body: getText(properties, ["Body", "Workflow", "Summary", "Result"]) || "TODO: 工作流说明",
+    url: getUrl(properties, ["URL", "userDefined:URL", "Public URL", "Link"]),
+    sort: getNumber(properties, ["Sort", "Sort Order", "Order"]),
+  };
+}
+
+function mapNoteEntry(page: NotionPage): NoteEntry {
+  const properties = page.properties || {};
+  return {
+    title: getText(properties, ["Title", "Name"]) || "Untitled Note",
+    topic: getText(properties, ["Topic", "Category", "Summary"]),
+    url: getUrl(properties, ["URL", "userDefined:URL", "Public URL", "Link"]),
+    sort: getNumber(properties, ["Sort", "Sort Order", "Order"]),
+  };
 }
 
 async function queryDatabase(databaseId?: string): Promise<NotionPage[] | null> {
@@ -153,6 +187,10 @@ function isPublished(page: NotionPage) {
   const properties = page.properties || {};
   const published = findProperty(properties, ["Published", "Public", "Visible"]);
   return published?.type === "checkbox" ? published.checkbox === true : true;
+}
+
+function getSection(page: NotionPage) {
+  return getText(page.properties || {}, ["Section"]);
 }
 
 function getText(properties: Record<string, NotionProperty>, names: string[]) {
