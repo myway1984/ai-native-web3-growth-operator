@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #02070d;
+  --surface: rgba(9, 20, 31, 0.84);
+  --surface-strong: rgba(13, 28, 43, 0.96);
+  --border: rgba(148, 169, 199, 0.17);
+  --border-strong: rgba(124, 255, 82, 0.36);
+  --text: #f4f7fb;
+  --muted: #95a3b8;
+  --soft: #c8d3e5;
+  --green: #7cff52;
+  --cyan: #45d8ff;
+  --violet: #8d65ff;
+  --shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+::selection {
+  color: #06100a;
+  background: var(--green);
+}
+
+@utility panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(13, 27, 42, 0.9), rgba(6, 15, 24, 0.86));
+  box-shadow: var(--shadow);
+}
+
+@utility panel-flat {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(7, 16, 25, 0.72);
+}
+
+@utility chrome-button {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(8, 17, 27, 0.74);
+}

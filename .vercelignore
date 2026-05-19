@@ -1,0 +1,8 @@
+node_modules
+.next
+dist
+out
+*.tsbuildinfo
+homepage-production-*.png
+homepage-*.png
+个人主页prd.md
