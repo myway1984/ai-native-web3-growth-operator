@@ -1,8 +1,12 @@
 import { CheckCircle2 } from "lucide-react";
-import { notes } from "@/lib/site-data";
 import { Panel } from "@/components/ui/panel";
+import type { NoteEntry } from "@/lib/notion-cms";
 
-export function NotesPreview() {
+type NotesPreviewProps = {
+  notes: NoteEntry[];
+};
+
+export function NotesPreview({ notes }: NotesPreviewProps) {
   return (
     <section id="notes" className="py-16 md:py-24">
       <div className="mb-7">
@@ -17,12 +21,22 @@ export function NotesPreview() {
       <Panel className="bg-[rgba(3,10,17,0.86)] p-3">
         {notes.map((note) => (
           <div
-            key={note}
+            key={note.title}
             className="grid grid-cols-[24px_1fr_auto] items-center gap-3 border-t border-[rgba(148,169,199,0.11)] px-3 py-4 first:border-t-0 max-sm:grid-cols-[24px_1fr]"
           >
             <CheckCircle2 size={17} className="text-[var(--green)]" />
-            <span className="font-medium">{note}</span>
-            <small className="text-xs text-[var(--muted)] max-sm:col-start-2">active research</small>
+            <span className="font-medium">
+              {note.url ? (
+                <a href={note.url} target="_blank" rel="noreferrer" className="hover:text-[var(--green)]">
+                  {note.title}
+                </a>
+              ) : (
+                note.title
+              )}
+            </span>
+            <small className="text-xs text-[var(--muted)] max-sm:col-start-2">
+              {note.topic || "active research"}
+            </small>
           </div>
         ))}
       </Panel>

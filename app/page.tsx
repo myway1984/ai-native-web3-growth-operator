@@ -7,8 +7,13 @@ import { MarketConsole } from "@/components/market-console";
 import { NotesPreview } from "@/components/notes-preview";
 import { SiteHeader } from "@/components/site-header";
 import { WorkPreview } from "@/components/work-preview";
+import { getCmsContent } from "@/lib/notion-cms";
 
-export default function Home() {
+export const revalidate = 300;
+
+export default async function Home() {
+  const cms = await getCmsContent();
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--text)]">
       <div className="fixed inset-0 -z-20 bg-[radial-gradient(circle_at_14%_12%,rgba(68,216,255,0.16),transparent_30rem),radial-gradient(circle_at_82%_4%,rgba(141,101,255,0.16),transparent_27rem),radial-gradient(circle_at_55%_54%,rgba(124,255,82,0.07),transparent_36rem),linear-gradient(180deg,#02070d_0%,#050b13_48%,#02070d_100%)]" />
@@ -29,9 +34,9 @@ export default function Home() {
 
       <div className="mx-auto w-[min(1180px,calc(100%-24px))] md:w-[min(1180px,calc(100%-40px))]">
         <AboutPreview />
-        <WorkPreview />
-        <AILabPreview />
-        <NotesPreview />
+        <WorkPreview projects={cms.projects} />
+        <AILabPreview items={cms.aiLab} />
+        <NotesPreview notes={cms.notes} />
         <ContactDock />
       </div>
     </main>

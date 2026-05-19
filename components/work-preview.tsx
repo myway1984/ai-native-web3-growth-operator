@@ -1,8 +1,12 @@
 import { ArrowUpRight } from "lucide-react";
-import { workProjects } from "@/lib/site-data";
 import { Panel } from "@/components/ui/panel";
+import type { WorkProject } from "@/lib/notion-cms";
 
-export function WorkPreview() {
+type WorkPreviewProps = {
+  projects: WorkProject[];
+};
+
+export function WorkPreview({ projects }: WorkPreviewProps) {
   return (
     <section id="work" className="py-16 md:py-24">
       <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -16,10 +20,16 @@ export function WorkPreview() {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        {workProjects.map((project, index) => (
+        {projects.map((project, index) => (
           <Panel key={project.name} className="relative min-h-[240px] p-5">
             <span className="text-sm font-black text-[var(--green)]">0{index + 1}</span>
-            <ArrowUpRight size={18} className="absolute right-5 top-5 text-[var(--cyan)]" />
+            {project.url ? (
+              <a href={project.url} target="_blank" rel="noreferrer" aria-label={`${project.name} link`}>
+                <ArrowUpRight size={18} className="absolute right-5 top-5 text-[var(--cyan)]" />
+              </a>
+            ) : (
+              <ArrowUpRight size={18} className="absolute right-5 top-5 text-[var(--cyan)]" />
+            )}
             <h3 className="mt-8 text-xl font-bold">{project.name}</h3>
             <div className="mt-5 grid gap-2 text-sm text-[var(--muted)]">
               <p>{project.scene}</p>
